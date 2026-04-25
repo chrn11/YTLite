@@ -40,34 +40,28 @@ on:
         default: false
 
       ipa_url:
-        description: "URL to the decrypted IPA file"
+        description: "URL to the decrypted IPA file (leave empty to only build .deb)"
         default: ""
-        required: true
+        required: false
         type: string
 
       tweak_url:
-        description: "URL to the YouTube Plus tweak file"
+        description: "URL to the YouTube Plus tweak file (leave empty to use source build)"
         default: ""
-        required: true
+        required: false
         type: string
 
       display_name:
-        description: "App Name (Optional)"
+        description: "App Name (only when packaging IPA)"
         default: "YouTube"
-        required: true
+        required: false
         type: string
 
       bundle_id:
-        description: "BundleID (Optional)"
+        description: "BundleID (only when packaging IPA)"
         default: "com.google.ios.youtube"
-        required: true
-        type: string
-
-      info_note:
-        description: "TIP: Learn more about integrations in the README via the link below"
-        default: "https://github.com/dayanch96/YTLite#tweak-integration-details"
-        type: string
         required: false
+        type: string
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -91,6 +85,7 @@ jobs:
     needs: build-tweaks
     permissions:
       contents: write
+    if: ${{ inputs.ipa_url != '' }}
 
     steps:
       - name: Download built debs
@@ -98,11 +93,6 @@ jobs:
         with:
           name: built-debs
           path: ${{ github.workspace }}
-
-      - name: Hide sensitive inputs
-        uses: levibostian/action-hide-sensitive-inputs@v1
-        with:
-          exclude_inputs: bundle_id,display_name,enable_demc,enable_ryd,enable_ytabc,enable_youpip,enable_yq,enable_ytuhd,info_note
 
       - name: Download and validate IPA
         run: |
