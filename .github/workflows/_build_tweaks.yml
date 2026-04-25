@@ -94,6 +94,15 @@ jobs:
           fi
           cp -r "$THEOS/include/YouTubeHeader" "$THEOS/include/YTHeaders" 2>/dev/null || true
 
+      - name: Clone roothide headers (for YTLite build)
+        run: |
+          cd /tmp
+          git clone --quiet -n --depth=1 --filter=blob:none https://github.com/roothide/headers.git roothide-headers
+          cd roothide-headers
+          git sparse-checkout set --no-cone roothide.h roothide libroot.h libroot bootstrap.h version.h sandbox.h
+          git checkout
+          cp -r roothide.h roothide libroot.h libroot bootstrap.h version.h sandbox.h "$THEOS/include/" 2>/dev/null || true
+
       - name: Build YTLite from source
         run: |
           cd YTLite && make clean package DEBUG=0 FINALPACKAGE=1
