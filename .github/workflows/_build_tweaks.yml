@@ -87,12 +87,21 @@ jobs:
 
       - name: Clone YouTubeHeader (for YTLite build)
         run: |
+          # 克隆到 $THEOS/include 供 Theos include 路径使用
           if [ -d "$THEOS/include/YouTubeHeader" ]; then
             cd $THEOS/include/YouTubeHeader && git pull
           else
             cd $THEOS/include && git clone --quiet --depth=1 https://github.com/PoomSmart/YouTubeHeader.git
           fi
           cp -r "$THEOS/include/YouTubeHeader" "$THEOS/include/YTHeaders" 2>/dev/null || true
+          # 同时克隆到 YTLite 源码的同级目录，解决源码中 #import "../YouTubeHeader/xxx.h" 的相对路径引用
+          if [ ! -d "$GITHUB_WORKSPACE/YouTubeHeader" ]; then
+            cd $GITHUB_WORKSPACE && git clone --quiet --depth=1 https://github.com/PoomSmart/YouTubeHeader.git
+          fi
+          # 复制 GPB*.h 到 ../protobuf/objectivec/ 解决 YTNativeShare.x 中 #import "../protobuf/objectivec/GPB*.h"
+          mkdir -p "$GITHUB_WORKSPACE/protobuf/objectivec"
+          cd "$THEOS/include/YouTubeHeader"
+          for f in GPB*.h; do cp "$f" "$GITHUB_WORKSPACE/protobuf/objectivec/" 2>/dev/null; done
 
       - name: Clone roothide headers (for YTLite build)
         run: |
