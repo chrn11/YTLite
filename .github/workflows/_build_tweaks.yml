@@ -226,3 +226,27 @@ jobs:
             *.appex
           if-no-files-found: ignore
           retention-days: 1
+
+  release-debs:
+    name: Release .deb files
+    runs-on: ubuntu-latest
+    needs: build-tweaks
+    permissions:
+      contents: write
+    if: always()
+
+    steps:
+      - name: Download built debs
+        uses: actions/download-artifact@v8
+        with:
+          name: built-debs
+          path: ${{ github.workspace }}
+
+      - name: Upload .deb files to Releases
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ytlite-deb-${{ github.run_number }}
+          name: YTLite .deb (${{ github.run_number }})
+          files: |
+            *.deb
+          draft: true
