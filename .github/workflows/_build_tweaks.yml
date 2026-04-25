@@ -100,14 +100,18 @@ jobs:
           fi
           # 复制 GPB*.h 到 ../protobuf/objectivec/ 解决 YTNativeShare.x 中 #import "../protobuf/objectivec/GPB*.h"
           # YouTubeHeader 中的 GPB 头文件是 stub 版本缺少方法声明
-          # 需要完整版本，用上游 youtube-native-share 锁定的 protobuf commit (b8764f09) 以确保 API 兼容
+          # 从上游 youtube-native-share 提取完整的 protobuf 子模块（含兼容版本的 GPB 头文件）
           mkdir -p "$GITHUB_WORKSPACE/protobuf/objectivec"
-          PB_REF="b8764f0941a6a5d500c48671716f0de81eb1dcaf"
-          PB_RAW="https://raw.githubusercontent.com/protocolbuffers/protobuf/$PB_REF/objectivec"
-          # 下载 YTNativeShare.x 需要的 GPB 头文件
-          for h in GPBDescriptor.h GPBMessage.h GPBUnknownField.h GPBUnknownFieldSet.h GPBExtensionDescriptor.h GPBExtensionRegistry.h GPBRootObject.h GPBCodedInputStream.h; do
-            curl -sL "$PB_RAW/$h" -o "$GITHUB_WORKSPACE/protobuf/objectivec/$h"
-          done
+          cd /tmp
+          git clone --quiet --depth=1 https://github.com/jkhsjdhjs/youtube-native-share.git yns-src
+          # protobuf 是 submodule，需要初始化
+          cd yns-src
+          git submodule update --init --depth=1 protobuf 2>/dev/null || true
+          # 复制 GPB*.h 头文件
+          if [ -d "protobuf/objectivec" ]; then
+            for f in protobuf/objectivec/GPB*.h; do cp "$f" "$GITHUB_WORKSPACE/protobuf/objectivec/" 2>/dev/null; done
+          fi
+          echo "Downloaded GPB headers:"; ls "$GITHUB_WORKSPACE/protobuf/objectivec/"
 
       - name: Clone roothide headers (for YTLite build)
         run: |
