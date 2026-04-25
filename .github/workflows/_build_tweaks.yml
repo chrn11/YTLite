@@ -56,7 +56,7 @@ jobs:
         id: theos
         uses: actions/cache@v5
         env:
-          cache-name: theos_cache_9bc7340
+          cache-name: theos_cache_9bc7340_v2
         with:
           path: theos/
           key: ${{ env.cache-name }}
@@ -99,9 +99,12 @@ jobs:
           cd /tmp
           git clone --quiet -n --depth=1 --filter=blob:none https://github.com/roothide/headers.git roothide-headers
           cd roothide-headers
-          git sparse-checkout set --no-cone roothide.h roothide libroot.h libroot bootstrap.h version.h sandbox.h
+          git sparse-checkout set --no-cone roothide.h roothide
           git checkout
-          cp -r roothide.h roothide libroot.h libroot bootstrap.h version.h sandbox.h "$THEOS/include/" 2>/dev/null || true
+          cp roothide.h "$THEOS/include/"
+          cp -r roothide "$THEOS/include/"
+          # 在非 RootHide 模式下，stub 不需要链接 libroothide，移除 link 指令避免链接错误
+          sed -i '' '/link "roothide"/d' "$THEOS/include/roothide/module.modulemap"
 
       - name: Build YTLite from source
         run: |
