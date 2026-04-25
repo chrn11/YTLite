@@ -99,9 +99,15 @@ jobs:
             cd $GITHUB_WORKSPACE && git clone --quiet --depth=1 https://github.com/PoomSmart/YouTubeHeader.git
           fi
           # 复制 GPB*.h 到 ../protobuf/objectivec/ 解决 YTNativeShare.x 中 #import "../protobuf/objectivec/GPB*.h"
+          # YouTubeHeader 中的 GPB 头文件是 stub 版本缺少方法声明，需要完整版本
           mkdir -p "$GITHUB_WORKSPACE/protobuf/objectivec"
-          cd "$THEOS/include/YouTubeHeader"
-          for f in GPB*.h; do cp "$f" "$GITHUB_WORKSPACE/protobuf/objectivec/" 2>/dev/null; done
+          cd /tmp
+          git clone --quiet -n --depth=1 --filter=blob:none https://github.com/protocolbuffers/protobuf.git protobuf-src
+          cd protobuf-src
+          git sparse-checkout set --no-cone objectivec
+          git checkout
+          # 只复制需要的 GPB*.h 头文件（不要 .m 实现文件）
+          for f in objectivec/GPB*.h; do cp "$f" "$GITHUB_WORKSPACE/protobuf/objectivec/" 2>/dev/null; done
 
       - name: Clone roothide headers (for YTLite build)
         run: |
